@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>A Sweet Birthday Surprise</title>
+  <style>
+    :root {
+      --bg-color: #1a0f0d;
+      --card-bg: #2d1b18;
+      --gold: #d4af37;
+      --gold-light: #f3e5ab;
+      --text-light: #f8f5f0;
+      --accent-red: #8b0000;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-light);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 15px;
+    }
+
+    header { text-align: center; margin-bottom: 15px; }
+    h1 { color: var(--gold); font-size: 1.6rem; letter-spacing: 1px; margin-bottom: 4px; }
+    p.subtitle { font-size: 0.85rem; color: var(--gold-light); opacity: 0.85; }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 4px;
+      background: var(--card-bg);
+      padding: 10px;
+      border-radius: 12px;
+      border: 2px solid var(--gold);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      max-width: 450px;
+      width: 100%;
+    }
+
+    .tile {
+      aspect-ratio: 1;
+      background: #3d2521;
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--gold-light);
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+
+    .tile .coord {
+      font-size: 0.42rem;
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      opacity: 0.4;
+      color: var(--text-light);
+    }
+
+    .tile.filled {
+      background: #52322c;
+      border-color: var(--gold);
+    }
+
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      max-width: 450px;
+      width: 100%;
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--gold), #aa820a);
+      color: var(--bg-color);
+      border: none;
+      padding: 10px 18px;
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .section-card {
+      margin-top: 18px;
+      background: var(--card-bg);
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px dashed var(--gold);
+      max-width: 450px;
+      width: 100%;
+      display: none;
+    }
+
+    .section-card h3 { color: var(--gold); font-size: 0.95rem; margin-bottom: 10px; text-align: center; }
+    .word-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .word-tag { background: #3d2521; padding: 6px 12px; border-radius: 14px; font-size: 0.8rem; color: var(--gold-light); cursor: pointer; border: 1px solid var(--gold); }
+    .word-tag.completed { background: var(--gold); color: var(--bg-color); font-weight: bold; }
+
+    .sentence-box {
+      min-height: 50px;
+      background: #180d0b;
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      z-index: 100;
+    }
+
+    .ticket {
+      background: linear-gradient(135deg, #fff8e7, #f3e5ab);
+      color: #2d1b18;
+      border-radius: 16px;
+      padding: 25px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+      border: 3px double var(--gold);
+    }
+
+    .ticket h2 { color: var(--accent-red); font-size: 1.6rem; margin-bottom: 8px; }
+    .ticket p { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.4; }
+    .ticket .details {
+      background: rgba(0,0,0,0.05);
+      padding: 12px;
+      border-radius: 8px;
+      margin: 12px 0;
+      font-weight: bold;
+      border: 1px solid rgba(212, 175, 55, 0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>The Birthday Countdown</h1>
+    <p class="subtitle">Input your daily truffle tokens to build your puzzle</p>
+  </header>
+
+  <div class="grid-container" id="grid"></div>
+
+  <div class="controls">
+    <button onclick="clearGrid()">Reset Grid</button>
+  </div>
+
+  <div class="section-card" id="wordSearchSection">
+    <h3>Stage 1: Words Unlocked!</h3>
+    <div class="word-tags" id="wordTags"></div>
+  </div>
+
+  <div class="section-card" id="sentenceSection">
+    <h3>Stage 2: Assemble the Secret Phrase!</h3>
+    <p style="font-size: 0.75rem; color: var(--gold-light); text-align: center; margin-bottom: 8px;">Tap the words below in order to build your message:</p>
+    <div class="sentence-box" id="sentenceSlots"></div>
+    <div class="word-tags" id="bankTags"></div>
+    <div style="text-align:center; margin-top:12px;">
+      <button onclick="checkSentence()">Reveal Trip!</button>
+    </div>
+  </div>
+
+  <div class="modal" id="revealModal">
+    <div class="ticket">
+      <h2>HAPPY 40TH BIRTHDAY!</h2>
+      <p><strong>Pack Your Bags!</strong></p>
+      <p>We are off on a sweet birthday adventure to Switzerland!</p>
+      <div class="details">
+        📍 Zurich, Switzerland<br>
+        🍫 Visit to Lindt Home of Chocolate<br>
+        🗓️ August 28 – 31
+      </div>
+      <p>Celebrations Await!</p>
+    </div>
+  </div>
+
+  <script>
+    const ROWS = 9, COLS = 9;
+    const targetWords = ["YOUR", "SWISS", "CHOCOLATE", "BIRTHDAY", "ADVENTURE", "AWAITS", "AT", "LINDT", "ZURICH"];
+    const correctSentence = "YOUR SWISS CHOCOLATE BIRTHDAY ADVENTURE AWAITS AT LINDT ZURICH";
+    
+    let gridData = JSON.parse(localStorage.getItem('zurich_grid_final')) || Array(9).fill(null).map(() => Array(9).fill(''));
+    let assembledWords = [];
+
+    function renderGrid() {
+      const container = document.getElementById('grid');
+      container.innerHTML = '';
+      let filledCount = 0;
+
+      for(let r=0; r<ROWS; r++) {
+        for(let c=0; c<COLS; c++) {
+          const tile = document.createElement('div');
+          tile.className = 'tile';
+          if(gridData[r][c]) {
+            tile.textContent = gridData[r][c];
+            tile.classList.add('filled');
+            filledCount++;
+          }
+          
+          const coord = document.createElement('span');
+          coord.className = 'coord';
+          coord.textContent = `R${r+1}C${c+1}`;
+          tile.appendChild(coord);
+
+          tile.onclick = () => handleTileClick(r, c);
+          container.appendChild(tile);
+        }
+      }
+
+      if(filledCount === 81) {
+        enableWordSearchMode();
+      }
+    }
+
+    function handleTileClick(r, c) {
+      const char = prompt(`Enter letter for Row ${r+1}, Column ${c+1}:`)?.toUpperCase();
+      if(char && char.length === 1 && char.match(/[A-Z]/)) {
+        gridData[r][c] = char;
+        localStorage.setItem('zurich_grid_final', JSON.stringify(gridData));
+        renderGrid();
+      }
+    }
+
+    function clearGrid() {
+      if(confirm("Reset all letters?")) {
+        gridData = Array(9).fill(null).map(() => Array(9).fill(''));
+        localStorage.removeItem('zurich_grid_final');
+        assembledWords = [];
+        document.getElementById('sentenceSlots').innerHTML = '';
+        document.getElementById('wordSearchSection').style.display = 'none';
+        document.getElementById('sentenceSection').style.display = 'none';
+        renderGrid();
+      }
+    }
+
+    function enableWordSearchMode() {
+      document.getElementById('wordSearchSection').style.display = 'block';
+      const tagsContainer = document.getElementById('wordTags');
+      tagsContainer.innerHTML = '';
+      
+      targetWords.forEach(word => {
+        const tag = document.createElement('div');
+        tag.className = 'word-tag completed';
+        tag.textContent = word;
+        tagsContainer.appendChild(tag);
+      });
+
+      setTimeout(() => {
+        enableSentenceBuilder();
+      }, 800);
+    }
+
+    function enableSentenceBuilder() {
+      document.getElementById('sentenceSection').style.display = 'block';
+      const bank = document.getElementById('bankTags');
+      bank.innerHTML = '';
+      
+      const shuffled = [...targetWords].sort(() => Math.random() - 0.5);
+      shuffled.forEach(word => {
+        const tag = document.createElement('div');
+        tag.className = 'word-tag';
+        tag.textContent = word;
+        tag.onclick = () => moveWordToSentence(word, tag);
+        bank.appendChild(tag);
+      });
+    }
+
+    function moveWordToSentence(word, tagElement) {
+      assembledWords.push(word);
+      tagElement.style.display = 'none';
+      
+      const slots = document.getElementById('sentenceSlots');
+      const wordTag = document.createElement('div');
+      wordTag.className = 'word-tag completed';
+      wordTag.textContent = word;
+      slots.appendChild(wordTag);
+    }
+
+    function checkSentence() {
+      if(assembledWords.join(' ') === correctSentence) {
+        document.getElementById('revealModal').style.display = 'flex';
+      } else {
+        alert("Not quite right yet! Try clearing or re-ordering the words in exact sequence.");
+        assembledWords = [];
+        document.getElementById('sentenceSlots').innerHTML = '';
+        enableSentenceBuilder();
+      }
+    }
+
+    renderGrid();
+  </script>
+</body>
+</html>
