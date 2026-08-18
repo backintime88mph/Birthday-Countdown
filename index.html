@@ -123,6 +123,7 @@
       margin-bottom: 12px;
     }
 
+    /* Modal Overlays */
     .modal {
       display: none;
       position: fixed;
@@ -132,6 +133,40 @@
       align-items: center;
       padding: 20px;
       z-index: 100;
+    }
+
+    .input-card {
+      background: var(--card-bg);
+      border: 2px solid var(--gold);
+      border-radius: 14px;
+      padding: 20px;
+      max-width: 320px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+
+    .input-card h3 { color: var(--gold); font-size: 1.2rem; margin-bottom: 4px; }
+    .input-card p { font-size: 0.85rem; color: var(--gold-light); margin-bottom: 12px; }
+    
+    .input-card input {
+      width: 60px;
+      height: 60px;
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      background: #180d0b;
+      border: 1px solid var(--gold);
+      color: var(--gold-light);
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .input-card .btn-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
     }
 
     .ticket {
@@ -186,6 +221,20 @@
     </div>
   </div>
 
+  <!-- Custom Input Modal -->
+  <div class="modal" id="inputModal">
+    <div class="input-card">
+      <h3>Matty says...</h3>
+      <p id="modalPromptText">Enter letter for Row 1, Column 1:</p>
+      <input type="text" id="letterInput" maxlength="1" autocomplete="off" />
+      <div class="btn-group">
+        <button onclick="submitLetter()">Submit</button>
+        <button onclick="closeInputModal()" style="background: #3d2521; color: var(--gold-light);">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final Reveal Modal -->
   <div class="modal" id="revealModal">
     <div class="ticket">
       <h2>HAPPY 40TH BIRTHDAY!</h2>
@@ -205,8 +254,23 @@
     const targetWords = ["YOUR", "SWISS", "CHOCOLATE", "BIRTHDAY", "ADVENTURE", "AWAITS", "AT", "LINDT", "ZURICH"];
     const correctSentence = "YOUR SWISS CHOCOLATE BIRTHDAY ADVENTURE AWAITS AT LINDT ZURICH";
     
-    let gridData = JSON.parse(localStorage.getItem('zurich_grid_final')) || Array(9).fill(null).map(() => Array(9).fill(''));
+    // Master Grid Solution - Hardcoded Validation Matrix
+    const solutionGrid = [
+      ['H', 'C', 'I', 'R', 'U', 'Z', 'Q', 'X', 'P'],
+      ['F', 'A', 'D', 'V', 'E', 'N', 'T', 'U', 'R'],
+      ['L', 'I', 'N', 'D', 'T', 'S', 'M', 'B', 'O'],
+      ['Y', 'O', 'U', 'R', 'B', 'K', 'G', 'I', 'X'],
+      ['A', 'T', 'W', 'P', 'A', 'W', 'A', 'I', 'T'],
+      ['R', 'B', 'I', 'R', 'T', 'H', 'D', 'A', 'Y'],
+      ['S', 'W', 'I', 'S', 'S', 'C', 'L', 'U', 'B'],
+      ['C', 'H', 'O', 'C', 'O', 'L', 'A', 'T', 'E'],
+      ['S', 'U', 'R', 'P', 'R', 'I', 'S', 'E', '!']
+    ];
+
+    let gridData = JSON.parse(localStorage.getItem('zurich_grid_v2')) || Array(9).fill(null).map(() => Array(9).fill(''));
     let assembledWords = [];
+    let currentSelectedRow = null;
+    let currentSelectedCol = null;
 
     function renderGrid() {
       const container = document.getElementById('grid');
@@ -228,7 +292,7 @@
           coord.textContent = `R${r+1}C${c+1}`;
           tile.appendChild(coord);
 
-          tile.onclick = () => handleTileClick(r, c);
+          tile.onclick = () => openInputModal(r, c);
           container.appendChild(tile);
         }
       }
@@ -238,19 +302,53 @@
       }
     }
 
-    function handleTileClick(r, c) {
-      const char = prompt(`Enter letter for Row ${r+1}, Column ${c+1}:`)?.toUpperCase();
-      if(char && char.length === 1 && char.match(/[A-Z]/)) {
-        gridData[r][c] = char;
-        localStorage.setItem('zurich_grid_final', JSON.stringify(gridData));
+    function openInputModal(r, c) {
+      currentSelectedRow = r;
+      currentSelectedCol = c;
+      document.getElementById('modalPromptText').textContent = `Enter token letter for R${r+1}C${c+1}:`;
+      const inputField = document.getElementById('letterInput');
+      inputField.value = gridData[r][c] || '';
+      document.getElementById('inputModal').style.display = 'flex';
+      setTimeout(() => inputField.focus(), 100);
+    }
+
+    function closeInputModal() {
+      document.getElementById('inputModal').style.display = 'none';
+      currentSelectedRow = null;
+      currentSelectedCol = null;
+    }
+
+    function submitLetter() {
+      const inputField = document.getElementById('letterInput');
+      const val = inputField.value.trim().toUpperCase();
+      const expectedVal = solutionGrid[currentSelectedRow][currentSelectedCol];
+
+      if(val === expectedVal) {
+        gridData[currentSelectedRow][currentSelectedCol] = val;
+        localStorage.setItem('zurich_grid_v2', JSON.stringify(gridData));
+        closeInputModal();
         renderGrid();
+      } else if (val === "") {
+        gridData[currentSelectedRow][currentSelectedCol] = "";
+        localStorage.setItem('zurich_grid_v2', JSON.stringify(gridData));
+        closeInputModal();
+        renderGrid();
+      } else {
+        alert(`Not quite! Double check your token slip for Row ${currentSelectedRow+1}, Column ${currentSelectedCol+1}.`);
+        inputField.value = '';
+        inputField.focus();
       }
     }
 
+    // Allow pressing Enter in the modal input box
+    document.getElementById('letterInput').addEventListener('keyup', function(e) {
+      if(e.key === 'Enter') submitLetter();
+    });
+
     function clearGrid() {
-      if(confirm("Reset all letters?")) {
+      if(confirm("Reset all saved letters?")) {
         gridData = Array(9).fill(null).map(() => Array(9).fill(''));
-        localStorage.removeItem('zurich_grid_final');
+        localStorage.removeItem('zurich_grid_v2');
         assembledWords = [];
         document.getElementById('sentenceSlots').innerHTML = '';
         document.getElementById('wordSearchSection').style.display = 'none';
