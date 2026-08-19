@@ -3,435 +3,553 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Birthday Countdown & Secret Word Search</title>
+  <title>A Sweet Birthday Surprise</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --accent: #38bdf8;
-      --accent-gold: #f59e0b;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --grid-border: #334155;
-      --found: #10b981;
+      --bg-color: #1a0f0d;
+      --card-bg: #2d1b18;
+      --gold: #d4af37;
+      --gold-light: #f3e5ab;
+      --text-light: #f8f5f0;
+      --accent-red: #8b0000;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      display: flex;
-      justify-content: center;
-      padding: 24px 16px;
-      min-height: 100vh;
-    }
-
-    .container {
-      max-width: 520px;
-      width: 100%;
+      background-color: var(--bg-color);
+      color: var(--text-light);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      align-items: center;
+      min-height: 100vh;
+      padding: 15px;
     }
 
-    header { text-align: center; }
-    header h1 { font-size: 1.5rem; color: var(--accent-gold); margin-bottom: 6px; }
-    header p { color: var(--muted); font-size: 0.9rem; }
+    header { text-align: center; margin-bottom: 15px; }
+    h1 { color: var(--gold); font-size: 1.6rem; letter-spacing: 1px; margin-bottom: 4px; }
+    p.subtitle { font-size: 0.85rem; color: var(--gold-light); opacity: 0.85; }
 
-    /* Grid Layout */
     .grid-container {
-      background: var(--card-bg);
-      padding: 12px;
-      border-radius: 16px;
       display: grid;
       grid-template-columns: repeat(9, 1fr);
-      gap: 6px;
-      touch-action: none;
-      user-select: none;
+      gap: 4px;
+      background: var(--card-bg);
+      padding: 10px;
+      border-radius: 12px;
+      border: 2px solid var(--gold);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      max-width: 450px;
+      width: 100%;
     }
 
-    .cell {
+    .tile {
       aspect-ratio: 1;
-      background: #0f172a;
-      border: 1px solid var(--grid-border);
-      border-radius: 8px;
+      background: #3d2521;
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 4px;
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--gold-light);
       cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease;
+      user-select: none;
       position: relative;
     }
-    .cell .coord-label {
-      font-size: 0.55rem;
-      color: var(--muted);
+
+    .tile .coord {
+      font-size: 0.42rem;
       position: absolute;
-      top: 3px;
-      left: 4px;
-      font-weight: 600;
+      top: 1px;
+      left: 1px;
+      opacity: 0.4;
+      color: var(--text-light);
     }
-    .cell .letter-val {
-      font-weight: 700;
-      font-size: 1.1rem;
-      text-transform: uppercase;
-      color: var(--text);
-      margin-top: 6px;
-    }
-    .cell.prefilled { background: #0f172a; }
-    .cell.prefilled .letter-val { color: #475569; }
-    .cell.selected { background: #0284c7; }
-    .cell.selected .letter-val { color: #fff; }
-    .cell.found { background: var(--found); border-color: var(--found); }
-    .cell.found .letter-val { color: #fff; }
 
-    /* Stage 1 Dashboard */
-    .stage-card {
-      background: var(--card-bg);
-      padding: 16px;
-      border-radius: 16px;
+    .tile.filled {
+      background: #52322c;
+      border-color: rgba(212, 175, 55, 0.5);
+    }
+
+    .tile.prefilled {
+      background: #2a1714;
+      color: #8c766b;
+      border-color: rgba(212, 175, 55, 0.15);
+    }
+
+    .tile.highlighted {
+      background: var(--gold) !important;
+      color: var(--bg-color) !important;
+      font-weight: 900;
+      box-shadow: 0 0 10px var(--gold);
+    }
+
+    .controls {
+      margin-top: 15px;
       display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .stage-title {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--accent);
-      font-weight: 700;
+      gap: 10px;
+      justify-content: center;
+      max-width: 450px;
+      width: 100%;
     }
 
-    .word-list {
+    button {
+      background: linear-gradient(135deg, var(--gold), #aa820a);
+      color: var(--bg-color);
+      border: none;
+      padding: 10px 18px;
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .section-card {
+      margin-top: 18px;
+      background: var(--card-bg);
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px dashed var(--gold);
+      max-width: 450px;
+      width: 100%;
+      display: none;
+    }
+
+    .section-card h3 { color: var(--gold); font-size: 0.95rem; margin-bottom: 6px; text-align: center; }
+    .section-card p.instructions { font-size: 0.75rem; color: var(--gold-light); text-align: center; margin-bottom: 10px; }
+
+    .word-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .word-tag { background: #3d2521; padding: 6px 12px; border-radius: 14px; font-size: 0.8rem; color: var(--gold-light); cursor: pointer; border: 1px solid var(--gold); }
+    .word-tag.found { background: var(--gold); color: var(--bg-color); font-weight: bold; }
+
+    .ordered-guide-box {
+      min-height: 48px;
+      background: #180d0b;
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 8px;
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-    }
-    .word-pill {
-      background: #0f172a;
-      border: 1px solid var(--grid-border);
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      letter-spacing: 1px;
-      color: var(--muted);
-      transition: all 0.3s ease;
-    }
-    .word-pill.revealed {
-      border-color: var(--found);
-      color: var(--found);
-      background: rgba(16, 185, 129, 0.1);
-    }
-
-    .unveil-btn {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      background: var(--accent-gold);
-      color: #0f172a;
-      font-weight: 700;
-      font-size: 0.95rem;
-      cursor: pointer;
-      opacity: 0.5;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
-    .unveil-btn.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    /* Modal Overlay */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(4px);
+      gap: 6px;
       align-items: center;
       justify-content: center;
-      z-index: 100;
-      padding: 16px;
+      margin-bottom: 12px;
     }
-    .modal-overlay.active { display: flex; }
-    .modal-box {
+
+    .sentence-box {
+      min-height: 50px;
+      background: #180d0b;
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    /* Modals */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      z-index: 100;
+    }
+
+    .input-card {
       background: var(--card-bg);
-      border: 1px solid var(--grid-border);
-      border-radius: 16px;
+      border: 2px solid var(--gold);
+      border-radius: 14px;
       padding: 20px;
       max-width: 320px;
       width: 100%;
       text-align: center;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .modal-title { font-size: 1.1rem; color: var(--accent); font-weight: 700; }
-    .modal-body { font-size: 0.95rem; color: var(--text); line-height: 1.4; }
-    .modal-close-btn {
-      padding: 8px 16px;
-      background: var(--accent);
-      border: none;
-      border-radius: 8px;
-      color: #0f172a;
-      font-weight: 700;
-      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     }
 
-    /* Stage 2 Secret Card */
-    #stage2 {
-      display: none;
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      border: 2px solid var(--accent-gold);
-    }
-    .message-box {
-      font-size: 1.1rem;
-      line-height: 1.6;
+    .input-card h3 { color: var(--gold); font-size: 1.2rem; margin-bottom: 4px; }
+    .input-card p { font-size: 0.85rem; color: var(--gold-light); margin-bottom: 12px; }
+    
+    .input-card input {
+      width: 60px;
+      height: 60px;
       text-align: center;
-      color: var(--text);
-      padding: 12px 0;
+      font-size: 1.8rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      background: #180d0b;
+      border: 1px solid var(--gold);
+      color: var(--gold-light);
+      border-radius: 8px;
+      margin-bottom: 15px;
     }
-    .highlight-gold { color: var(--accent-gold); font-weight: 700; }
+
+    .input-card .btn-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .ticket {
+      background: linear-gradient(135deg, #fff8e7, #f3e5ab);
+      color: #2d1b18;
+      border-radius: 16px;
+      padding: 25px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+      border: 3px double var(--gold);
+    }
+
+    .ticket h2 { color: var(--accent-red); font-size: 1.6rem; margin-bottom: 8px; }
+    .ticket p { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.4; }
+    .ticket .details {
+      background: rgba(0,0,0,0.05);
+      padding: 12px;
+      border-radius: 8px;
+      margin: 12px 0;
+      font-weight: bold;
+      border: 1px solid rgba(212, 175, 55, 0.5);
+    }
   </style>
 </head>
 <body>
 
-<div class="container">
   <header>
-    <h1>Birthday Countdown Hunt</h1>
-    <p>Tap blocks or highlight secret words in the grid</p>
+    <h1>The Birthday Countdown</h1>
+    <p class="subtitle">Input your daily truffle tokens to build your puzzle</p>
   </header>
 
-  <!-- Interactive Grid -->
   <div class="grid-container" id="grid"></div>
 
-  <!-- Stage 1 Discovery Progress -->
-  <div class="stage-card" id="stage1">
-    <div class="stage-title">Stage 1: Words Discovered</div>
-    <div class="word-list" id="wordList"></div>
-    <button class="unveil-btn" id="unveilBtn" onclick="showStage2()">Unveil Secret Message</button>
+  <div class="controls">
+    <button onclick="clearGrid()">Reset Grid</button>
   </div>
 
-  <!-- Stage 2 Narrative Unveil -->
-  <div class="stage-card" id="stage2">
-    <div class="stage-title">Stage 2: The Reveal</div>
-    <div class="message-box" id="finalMessage"></div>
+  <!-- Stage 1: Word Search -->
+  <div class="section-card" id="wordSearchSection">
+    <h3>Stage 1: Word Search Hunt!</h3>
+    <p class="instructions">Find words in the grid and tap them below as you locate them:</p>
+    
+    <!-- Ordered Sequence Guide -->
+    <div style="font-size:0.75rem; color:var(--gold); text-align:center; margin-bottom:4px; font-weight:bold;">Your Ordered Phrase Guide:</div>
+    <div class="ordered-guide-box" id="orderedGuide">
+      <span style="font-size:0.75rem; color:#8c766b;">(Found words will appear here in correct order)</span>
+    </div>
+
+    <div class="word-tags" id="wordSearchBank"></div>
   </div>
-</div>
 
-<!-- Block Interaction Modal Popup -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal-box">
-    <div class="modal-title" id="modalTitle">Block Info</div>
-    <div class="modal-body" id="modalBody"></div>
-    <button class="modal-close-btn" onclick="closeModal()">Close</button>
+  <!-- Stage 2: Sentence Builder -->
+  <div class="section-card" id="sentenceSection">
+    <h3>Stage 2: Assemble the Secret Phrase!</h3>
+    <p class="instructions">Tap the words below in order using your phrase guide above:</p>
+    <div class="sentence-box" id="sentenceSlots"></div>
+    <div class="word-tags" id="bankTags"></div>
+    <div style="text-align:center; margin-top:12px;">
+      <button onclick="checkSentence()">Reveal Trip!</button>
+    </div>
   </div>
-</div>
 
-<script>
-  // 9x9 Master Matrix Layout
-  const masterGrid = [
-    ['H','C','I','R','U','Z','Q','X','P'], // Row 1 (ZURICH backwards C1-C6)
-    ['A','D','V','E','N','T','U','R','E'], // Row 2 (ADVENTURE forward C1-C9)
-    ['L','I','N','D','T','S','M','B','O'], // Row 3 (LINDT forward C1-C5)
-    ['Y','O','U','R','B','K','G','I','X'], // Row 4 (YOUR forward C1-C4)
-    ['A','T','W','A','W','A','I','T','S'], // Row 5 (AT C1-C2, AWAITS C4-C8)
-    ['R','Y','A','D','H','T','R','I','B'], // Row 6 (BIRTHDAY backwards C2-C9)
-    ['S','W','I','S','S','C','L','U','B'], // Row 7 (SWISS forward C1-C5)
-    ['E','T','A','L','O','C','O','H','C'], // Row 8 (CHOCOLATE backwards C1-C9)
-    ['S','U','R','P','R','I','S','E','!']  // Row 9 (SURPRISE! forward C1-C9)
-  ];
+  <!-- Custom Input Modal -->
+  <div class="modal" id="inputModal">
+    <div class="input-card">
+      <h3>Matty says...</h3>
+      <p id="modalPromptText">Enter letter for Row 1, Column 1:</p>
+      <input type="text" id="letterInput" maxlength="1" autocomplete="off" />
+      <div class="btn-group">
+        <button onclick="submitLetter()">Submit</button>
+        <button onclick="closeInputModal()" style="background: #3d2521; color: var(--gold-light);">Cancel</button>
+      </div>
+    </div>
+  </div>
 
-  // Pre-populated Decoy Tiles (18 tiles)
-  const prefilledCoords = [
-    "0,6","0,7","0,8", "2,5","2,6","2,7","2,8",
-    "3,4","3,5","3,6","3,7","3,8", "4,2","4,8",
-    "5,0", "6,5","6,6","6,7"
-  ];
+  <!-- Final Reveal Modal -->
+  <div class="modal" id="revealModal">
+    <div class="ticket">
+      <h2>HAPPY 40TH BIRTHDAY!</h2>
+      <p><strong>Pack Your Bags!</strong></p>
+      <p>We are off on a sweet birthday adventure to Switzerland!</p>
+      <div class="details">
+        📍 Zurich, Switzerland<br>
+        🍫 Visit to Lindt Home of Chocolate<br>
+        🗓️ August 28 – 31
+      </div>
+      <p>Celebrations Await!</p>
+    </div>
+  </div>
 
-  // Target Words Definition
-  const targetWords = [
-    { id: "ZURICH", text: "ZURICH", coords: ["0,5","0,4","0,3","0,2","0,1","0,0"] },
-    { id: "ADVENTURE", text: "ADVENTURE", coords: ["1,0","1,1","1,2","1,3","1,4","1,5","1,6","1,7","1,8"] },
-    { id: "LINDT", text: "LINDT", coords: ["2,0","2,1","2,2","2,3","2,4"] },
-    { id: "YOUR", text: "YOUR", coords: ["3,0","3,1","3,2","3,3"] },
-    { id: "AWAITS", text: "AWAITS", coords: ["4,3","4,4","4,5","4,6","4,7"] },
-    { id: "BIRTHDAY", text: "BIRTHDAY", coords: ["5,8","5,7","5,6","5,5","5,4","5,3","5,2","5,1"] },
-    { id: "SWISS", text: "SWISS", coords: ["6,0","6,1","6,2","6,3","6,4"] },
-    { id: "CHOCOLATE", text: "CHOCOLATE", coords: ["7,8","7,7","7,6","7,5","7,4","7,3","7,2","7,1","7,0"] },
-    { id: "SURPRISE", text: "SURPRISE!", coords: ["8,0","8,1","8,2","8,3","8,4","8,5","8,6","8,7","8,8"] }
-  ];
+  <script>
+    const ROWS = 9, COLS = 9;
+    const targetWords = ["YOUR", "SWISS", "CHOCOLATE", "BIRTHDAY", "ADVENTURE", "AWAITS", "AT", "LINDT", "ZURICH"];
+    const correctSentence = "YOUR SWISS CHOCOLATE BIRTHDAY ADVENTURE AWAITS AT LINDT ZURICH";
+    
+    // Master Grid Solution Matrix
+    const solutionGrid = [
+      ['H', 'C', 'I', 'R', 'U', 'Z', 'Q', 'X', 'P'],
+      ['A', 'D', 'V', 'E', 'N', 'T', 'U', 'R', 'E'],
+      ['L', 'I', 'N', 'D', 'T', 'S', 'M', 'B', 'O'],
+      ['Y', 'O', 'U', 'R', 'B', 'K', 'G', 'I', 'X'],
+      ['A', 'T', 'W', 'P', 'A', 'W', 'A', 'I', 'T'],
+      ['R', 'Y', 'A', 'D', 'H', 'T', 'R', 'I', 'B'],
+      ['S', 'W', 'I', 'S', 'S', 'C', 'L', 'U', 'B'],
+      ['E', 'T', 'A', 'L', 'O', 'C', 'O', 'H', 'C'],
+      ['S', 'U', 'R', 'P', 'R', 'I', 'S', 'E', '!']
+    ];
 
-  let selectedCells = [];
-  let foundWords = new Set();
-  let isSelecting = false;
+    // Pre-populated Decoy Coordinates
+    const prefilledCoords = [
+      "R1C7", "R1C8", "R1C9",
+      "R3C7", "R3C8", "R3C9",
+      "R4C6", "R4C7", "R4C9",
+      "R5C3",
+      "R7C6", "R7C7", "R7C8", "R7C9",
+      "R9C4", "R9C6", "R9C7", "R9C8"
+    ];
 
-  function init() {
-    renderGrid();
-    renderStage1();
-  }
+    let gridData = JSON.parse(localStorage.getItem('zurich_grid_v4')) || Array(9).fill(null).map(() => Array(9).fill(''));
+    let highlightedTiles = JSON.parse(localStorage.getItem('zurich_highlights_v4')) || [];
+    let foundWords = JSON.parse(localStorage.getItem('zurich_found_words_v4')) || [];
+    let assembledWords = [];
 
-  function renderGrid() {
-    const gridEl = document.getElementById('grid');
-    gridEl.innerHTML = '';
+    let currentSelectedRow = null;
+    let currentSelectedCol = null;
+    let isWordSearchActive = false;
 
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
-        const coord = `${r},${c}`;
-        const label = `R${r + 1}C${c + 1}`;
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.dataset.coord = coord;
-        cell.dataset.label = label;
+    // Load prefilled decoy letters
+    prefilledCoords.forEach(coord => {
+      const r = parseInt(coord[1]) - 1;
+      const c = parseInt(coord[3]) - 1;
+      gridData[r][c] = solutionGrid[r][c];
+    });
 
-        const labelSpan = document.createElement('span');
-        labelSpan.className = 'coord-label';
-        labelSpan.textContent = label;
+    function renderGrid() {
+      const container = document.getElementById('grid');
+      container.innerHTML = '';
+      let filledCount = 0;
 
-        const valSpan = document.createElement('span');
-        valSpan.className = 'letter-val';
-        valSpan.textContent = masterGrid[r][c];
-
-        if (prefilledCoords.includes(coord)) {
-          cell.classList.add('prefilled');
-        }
-
-        cell.appendChild(labelSpan);
-        cell.appendChild(valSpan);
-
-        // Word search selection listeners
-        cell.addEventListener('mousedown', () => startSelection(coord));
-        cell.addEventListener('mouseenter', () => updateSelection(coord));
-        cell.addEventListener('mouseup', endSelection);
-
-        // Tap/Click for Modal Info Popup
-        cell.addEventListener('click', (e) => {
-          if (selectedCells.length <= 1) {
-            openModal(label, masterGrid[r][c], prefilledCoords.includes(coord));
+      for(let r=0; r<ROWS; r++) {
+        for(let c=0; c<COLS; c++) {
+          const tile = document.createElement('div');
+          tile.className = 'tile';
+          const coordStr = `R${r+1}C${c+1}`;
+          
+          if(prefilledCoords.includes(coordStr)) {
+            tile.classList.add('prefilled');
           }
-        });
 
-        gridEl.appendChild(cell);
+          if(gridData[r][c]) {
+            tile.textContent = gridData[r][c];
+            if(!prefilledCoords.includes(coordStr)) tile.classList.add('filled');
+            filledCount++;
+          }
+
+          if(highlightedTiles.includes(coordStr)) {
+            tile.classList.add('highlighted');
+          }
+          
+          const coord = document.createElement('span');
+          coord.className = 'coord';
+          coord.textContent = coordStr;
+          tile.appendChild(coord);
+
+          tile.onclick = () => handleTileTap(r, c);
+          container.appendChild(tile);
+        }
+      }
+
+      if(filledCount === 81) {
+        enableWordSearchMode();
       }
     }
-    highlightFoundCells();
-  }
 
-  function startSelection(coord) {
-    isSelecting = true;
-    selectedCells = [coord];
-    updateCellStyles();
-  }
-
-  function updateSelection(coord) {
-    if (!isSelecting) return;
-    if (!selectedCells.includes(coord)) {
-      selectedCells.push(coord);
-      updateCellStyles();
-    }
-  }
-
-  function endSelection() {
-    if (!isSelecting) return;
-    isSelecting = false;
-    checkSelectedWord();
-  }
-
-  function updateCellStyles() {
-    document.querySelectorAll('.cell').forEach(cell => {
-      const coord = cell.dataset.coord;
-      if (selectedCells.includes(coord)) {
-        cell.classList.add('selected');
+    function handleTileTap(r, c) {
+      if(!isWordSearchActive) {
+        const coordStr = `R${r+1}C${c+1}`;
+        if(prefilledCoords.includes(coordStr)) return;
+        openInputModal(r, c);
       } else {
-        cell.classList.remove('selected');
+        const coordStr = `R${r+1}C${c+1}`;
+        const idx = highlightedTiles.indexOf(coordStr);
+        if(idx > -1) {
+          highlightedTiles.splice(idx, 1);
+        } else {
+          highlightedTiles.push(coordStr);
+        }
+        localStorage.setItem('zurich_highlights_v4', JSON.stringify(highlightedTiles));
+        renderGrid();
       }
-    });
-  }
-
-  function checkSelectedWord() {
-    targetWords.forEach(word => {
-      if (foundWords.has(word.id)) return;
-      
-      const forwardMatch = word.coords.every((val, idx) => val === selectedCells[idx]);
-      const reverseMatch = word.coords.slice().reverse().every((val, idx) => val === selectedCells[idx]);
-
-      if ((forwardMatch || reverseMatch) && selectedCells.length === word.coords.length) {
-        foundWords.add(word.id);
-      }
-    });
-
-    setTimeout(() => {
-      selectedCells = [];
-      updateCellStyles();
-      highlightFoundCells();
-      renderStage1();
-    }, 150);
-  }
-
-  function highlightFoundCells() {
-    targetWords.forEach(word => {
-      if (foundWords.has(word.id)) {
-        word.coords.forEach(coord => {
-          const cell = document.querySelector(`[data-coord="${coord}"]`);
-          if (cell) cell.classList.add('found');
-        });
-      }
-    });
-  }
-
-  function renderStage1() {
-    const listEl = document.getElementById('wordList');
-    listEl.innerHTML = '';
-
-    targetWords.forEach(word => {
-      const pill = document.createElement('div');
-      pill.className = 'word-pill';
-      
-      if (foundWords.has(word.id)) {
-        pill.classList.add('revealed');
-        pill.textContent = word.text;
-      } else {
-        pill.textContent = '? '.repeat(word.text.replace('!','').length).trim();
-      }
-      listEl.appendChild(pill);
-    });
-
-    const unveilBtn = document.getElementById('unveilBtn');
-    if (foundWords.size === targetWords.length) {
-      unveilBtn.classList.add('active');
-    } else {
-      unveilBtn.classList.remove('active');
     }
-  }
 
-  function openModal(label, letter, isDecoy) {
-    document.getElementById('modalTitle').textContent = `Block ${label}`;
-    document.getElementById('modalBody').innerHTML = `
-      Letter: <strong>${letter}</strong><br/>
-      Status: ${isDecoy ? '<em>Pre-filled Decoy Tile</em>' : '<em>Active Grid Letter</em>'}
-    `;
-    document.getElementById('modalOverlay').classList.add('active');
-  }
+    function openInputModal(r, c) {
+      currentSelectedRow = r;
+      currentSelectedCol = c;
+      document.getElementById('modalPromptText').textContent = `Enter token letter for R${r+1}C${c+1}:`;
+      const inputField = document.getElementById('letterInput');
+      inputField.value = gridData[r][c] || '';
+      document.getElementById('inputModal').style.display = 'flex';
+      setTimeout(() => inputField.focus(), 100);
+    }
 
-  function closeModal() {
-    document.getElementById('modalOverlay').classList.remove('active');
-  }
+    function closeInputModal() {
+      document.getElementById('inputModal').style.display = 'none';
+      currentSelectedRow = null;
+      currentSelectedCol = null;
+    }
 
-  function showStage2() {
-    document.getElementById('stage1').style.display = 'none';
-    const stage2 = document.getElementById('stage2');
-    stage2.style.display = 'flex';
+    function submitLetter() {
+      const inputField = document.getElementById('letterInput');
+      const val = inputField.value.trim().toUpperCase();
+      const expectedVal = solutionGrid[currentSelectedRow][currentSelectedCol];
 
-    document.getElementById('finalMessage').innerHTML = `
-      YOUR <span class="highlight-gold">SWISS</span> BIRTHDAY ADVENTURE AWAITS!<br/><br/>
-      Get ready for <span class="highlight-gold">LINDT</span> CHOCOLATE, breathtaking views, and a special <span class="highlight-gold">ZURICH</span> SURPRISE! 🇨🇭✨
-    `;
-  }
+      if(val === expectedVal) {
+        gridData[currentSelectedRow][currentSelectedCol] = val;
+        localStorage.setItem('zurich_grid_v4', JSON.stringify(gridData));
+        closeInputModal();
+        renderGrid();
+      } else if (val === "") {
+        gridData[currentSelectedRow][currentSelectedCol] = "";
+        localStorage.setItem('zurich_grid_v4', JSON.stringify(gridData));
+        closeInputModal();
+        renderGrid();
+      } else {
+        alert(`Not quite! Double check your token slip for Row ${currentSelectedRow+1}, Column ${currentSelectedCol+1}.`);
+        inputField.value = '';
+        inputField.focus();
+      }
+    }
 
-  init();
-</script>
+    document.getElementById('letterInput').addEventListener('keyup', function(e) {
+      if(e.key === 'Enter') submitLetter();
+    });
+
+    function enableWordSearchMode() {
+      isWordSearchActive = true;
+      document.getElementById('wordSearchSection').style.display = 'block';
+      renderWordSearchBank();
+      updateOrderedGuide();
+    }
+
+    function renderWordSearchBank() {
+      const bank = document.getElementById('wordSearchBank');
+      bank.innerHTML = '';
+
+      // Shuffled checklist display order
+      const displayOrder = ["ADVENTURE", "ZURICH", "CHOCOLATE", "AWAITS", "BIRTHDAY", "SWISS", "LINDT", "YOUR", "AT"];
+
+      displayOrder.forEach(word => {
+        const tag = document.createElement('div');
+        tag.className = 'word-tag';
+        if(foundWords.includes(word)) {
+          tag.style.display = 'none'; // Hide from bank once found
+        }
+        tag.textContent = word;
+        
+        tag.onclick = () => {
+          if(!foundWords.includes(word)) {
+            foundWords.push(word);
+            localStorage.setItem('zurich_found_words_v4', JSON.stringify(foundWords));
+            renderWordSearchBank();
+            updateOrderedGuide();
+            checkAllWordsFound();
+          }
+        };
+
+        bank.appendChild(tag);
+      });
+    }
+
+    function updateOrderedGuide() {
+      const guideBox = document.getElementById('orderedGuide');
+      guideBox.innerHTML = '';
+
+      if(foundWords.length === 0) {
+        guideBox.innerHTML = '<span style="font-size:0.75rem; color:#8c766b;">(Found words will appear here in correct order)</span>';
+        return;
+      }
+
+      // Filter targetWords in exact sentence order, only showing those found so far
+      targetWords.forEach((word, idx) => {
+        if(foundWords.includes(word)) {
+          const tag = document.createElement('div');
+          tag.className = 'word-tag found';
+          tag.textContent = `${idx + 1}. ${word}`;
+          guideBox.appendChild(tag);
+        }
+      });
+    }
+
+    function checkAllWordsFound() {
+      if(foundWords.length === targetWords.length) {
+        setTimeout(() => {
+          enableSentenceBuilder();
+        }, 500);
+      }
+    }
+
+    function enableSentenceBuilder() {
+      document.getElementById('sentenceSection').style.display = 'block';
+      const bank = document.getElementById('bankTags');
+      bank.innerHTML = '';
+      
+      const shuffled = [...targetWords].sort(() => Math.random() - 0.5);
+      shuffled.forEach(word => {
+        const tag = document.createElement('div');
+        tag.className = 'word-tag';
+        tag.textContent = word;
+        tag.onclick = () => moveWordToSentence(word, tag);
+        bank.appendChild(tag);
+      });
+    }
+
+    function moveWordToSentence(word, tagElement) {
+      assembledWords.push(word);
+      tagElement.style.display = 'none';
+      
+      const slots = document.getElementById('sentenceSlots');
+      const wordTag = document.createElement('div');
+      wordTag.className = 'word-tag found';
+      wordTag.textContent = word;
+      slots.appendChild(wordTag);
+    }
+
+    function checkSentence() {
+      if(assembledWords.join(' ') === correctSentence) {
+        document.getElementById('revealModal').style.display = 'flex';
+      } else {
+        alert("Not quite right yet! Check your phrase guide above and re-order the words.");
+        assembledWords = [];
+        document.getElementById('sentenceSlots').innerHTML = '';
+        enableSentenceBuilder();
+      }
+    }
+
+    function clearGrid() {
+      if(confirm("Reset all saved progress?")) {
+        gridData = Array(9).fill(null).map(() => Array(9).fill(''));
+        highlightedTiles = [];
+        foundWords = [];
+        assembledWords = [];
+        localStorage.removeItem('zurich_grid_v4');
+        localStorage.removeItem('zurich_highlights_v4');
+        localStorage.removeItem('zurich_found_words_v4');
+        document.getElementById('wordSearchSection').style.display = 'none';
+        document.getElementById('sentenceSection').style.display = 'none';
+        isWordSearchActive = false;
+        renderGrid();
+      }
+    }
+
+    renderGrid();
+  </script>
 </body>
 </html>
