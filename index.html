@@ -329,6 +329,9 @@
       { id: "ZURICH", text: "ZURICH", coords: ["R3C8", "R4C8", "R5C8", "R6C8", "R7C8", "R8C8", "R9C8"] }
     ];
 
+    // Combined list of all valid puzzle word tile coordinates
+    const puzzleWordCoords = Array.from(new Set(targetWords.flatMap(w => w.coords)));
+
     // Pre-populated Decoy Coordinates (Grey Cells in Screenshot)
     const prefilledCoords = [
       "R1C1", "R1C5",
@@ -339,9 +342,8 @@
       "R7C2", "R8C7"
     ];
 
-    let gridData = JSON.parse(localStorage.getItem('zurich_grid_v2_1')) || Array(9).fill(null).map(() => Array(9).fill(''));
-    let highlightedTiles = JSON.parse(localStorage.getItem('zurich_highlights_v2_1')) || [];
-    let foundWordIds = JSON.parse(localStorage.getItem('zurich_found_words_v2_1')) || [];
+    let gridData = JSON.parse(localStorage.getItem('zurich_grid_v2_2')) || Array(9).fill(null).map(() => Array(9).fill(''));
+    let highlightedTiles = JSON.parse(localStorage.getItem('zurich_highlights_v2_2')) || [];
 
     let currentSelectedRow = null;
     let currentSelectedCol = null;
@@ -400,27 +402,21 @@
         if(prefilledCoords.includes(coordStr)) return;
         openInputModal(r, c);
       } else {
+        // Strict Check: Only allow highlighting on true puzzle word letters
+        if (!puzzleWordCoords.includes(coordStr)) {
+          return;
+        }
+
         const idx = highlightedTiles.indexOf(coordStr);
         if(idx > -1) {
           highlightedTiles.splice(idx, 1);
         } else {
           highlightedTiles.push(coordStr);
         }
-        localStorage.setItem('zurich_highlights_v2_1', JSON.stringify(highlightedTiles));
-        checkWordSearchMatches();
+        localStorage.setItem('zurich_highlights_v2_2', JSON.stringify(highlightedTiles));
+        renderSentenceSlots();
         renderGrid();
       }
-    }
-
-    function checkWordSearchMatches() {
-      targetWords.forEach(word => {
-        const isMatched = word.coords.every(coord => highlightedTiles.includes(coord));
-        if (isMatched && !foundWordIds.includes(word.id)) {
-          foundWordIds.push(word.id);
-          localStorage.setItem('zurich_found_words_v2_1', JSON.stringify(foundWordIds));
-        }
-      });
-      renderSentenceSlots();
     }
 
     function openInputModal(r, c) {
@@ -446,12 +442,12 @@
 
       if(val === expectedVal) {
         gridData[currentSelectedRow][currentSelectedCol] = val;
-        localStorage.setItem('zurich_grid_v2_1', JSON.stringify(gridData));
+        localStorage.setItem('zurich_grid_v2_2', JSON.stringify(gridData));
         closeInputModal();
         renderGrid();
       } else if (val === "") {
         gridData[currentSelectedRow][currentSelectedCol] = "";
-        localStorage.setItem('zurich_grid_v2_1', JSON.stringify(gridData));
+        localStorage.setItem('zurich_grid_v2_2', JSON.stringify(gridData));
         closeInputModal();
         renderGrid();
       } else {
@@ -468,20 +464,25 @@
     function enableWordSearchMode() {
       isWordSearchActive = true;
       document.getElementById('wordSearchSection').style.display = 'block';
-      checkWordSearchMatches();
+      renderSentenceSlots();
     }
 
     function renderSentenceSlots() {
       const container = document.getElementById('sentenceContainer');
       container.innerHTML = '';
+      let foundCount = 0;
 
       targetWords.forEach(word => {
         const slot = document.createElement('div');
         slot.className = 'word-slot';
 
-        if (foundWordIds.includes(word.id)) {
+        // Word is revealed ONLY if 100% of its target coordinates are currently highlighted
+        const isFullyHighlighted = word.coords.every(coord => highlightedTiles.includes(coord));
+
+        if (isFullyHighlighted) {
           slot.classList.add('revealed');
           slot.textContent = word.text;
+          foundCount++;
         } else {
           slot.classList.add('hidden');
           slot.textContent = '? '.repeat(word.text.length).trim();
@@ -490,7 +491,7 @@
       });
 
       const solveBtn = document.getElementById('solveBtn');
-      if (foundWordIds.length === targetWords.length) {
+      if (foundCount === targetWords.length) {
         solveBtn.disabled = false;
       } else {
         solveBtn.disabled = true;
@@ -509,10 +510,8 @@
       if(confirm("Reset all saved progress?")) {
         gridData = Array(9).fill(null).map(() => Array(9).fill(''));
         highlightedTiles = [];
-        foundWordIds = [];
-        localStorage.removeItem('zurich_grid_v2_1');
-        localStorage.removeItem('zurich_highlights_v2_1');
-        localStorage.removeItem('zurich_found_words_v2_1');
+        localStorage.removeItem('zurich_grid_v2_2');
+        localStorage.removeItem('zurich_highlights_v2_2');
         document.getElementById('wordSearchSection').style.display = 'none';
         isWordSearchActive = false;
         renderGrid();
