@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>A Sweet Birthday Surprise</title>
+  <title>A Sweet Birthday Surprise - Baseline_V2.3</title>
   <style>
     :root {
       --bg-color: #1a0f0d;
@@ -208,41 +208,46 @@
       justify-content: center;
     }
 
-    .ticket {
-      background: linear-gradient(135deg, #fff8e7, #f3e5ab);
-      color: #2d1b18;
+    /* V2.3 Image-Only Reveal Modal Card */
+    .ticket-image-card {
+      background: var(--card-bg);
       border-radius: 16px;
-      padding: 25px;
-      max-width: 380px;
-      width: 100%;
-      text-align: center;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+      padding: 12px;
+      max-width: 420px;
+      width: 95%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.9);
       border: 3px double var(--gold);
       position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
-    .ticket .close-btn {
+    .ticket-image-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      display: block;
+      border: 1px solid rgba(212, 175, 55, 0.4);
+    }
+
+    .ticket-image-card .close-btn {
       position: absolute;
-      top: 10px;
-      right: 14px;
-      font-size: 1.4rem;
+      top: -12px;
+      right: -12px;
+      width: 32px;
+      height: 32px;
+      background: var(--gold);
+      color: var(--bg-color);
+      border-radius: 50%;
+      font-size: 1.2rem;
       font-weight: bold;
-      color: #2d1b18;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       cursor: pointer;
-      line-height: 1;
-      opacity: 0.6;
-    }
-    .ticket .close-btn:hover { opacity: 1; }
-
-    .ticket h2 { color: var(--accent-red); font-size: 1.6rem; margin-bottom: 8px; margin-top: 5px; }
-    .ticket p { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.4; }
-    .ticket .details {
-      background: rgba(0,0,0,0.05);
-      padding: 12px;
-      border-radius: 8px;
-      margin: 12px 0;
-      font-weight: bold;
-      border: 1px solid rgba(212, 175, 55, 0.5);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      z-index: 10;
     }
   </style>
 </head>
@@ -284,19 +289,12 @@
     </div>
   </div>
 
-  <!-- Final Reveal Modal -->
+  <!-- Final Image Reveal Modal (Baseline_V2.3) -->
   <div class="modal" id="revealModal">
-    <div class="ticket">
+    <div class="ticket-image-card">
       <span class="close-btn" onclick="closeRevealModal()">&times;</span>
-      <h2>HAPPY 40TH BIRTHDAY!</h2>
-      <p><strong>Pack Your Bags!</strong></p>
-      <p>We are off on a sweet birthday adventure to Switzerland!</p>
-      <div class="details">
-        📍 Zurich, Switzerland<br>
-        🍫 Visit to Lindt Home of Chocolate<br>
-        🗓️ August 28 – 31
-      </div>
-      <p>Celebrations Await!</p>
+      <!-- EDIT HERE: Change "YOUR-IMAGE-FILENAME.jpg" to your exact image file name -->
+      <img src="Final_image.jpg" alt="Birthday Surprise Image" />
     </div>
   </div>
 
@@ -332,7 +330,7 @@
     // Combined list of all valid puzzle word tile coordinates
     const puzzleWordCoords = Array.from(new Set(targetWords.flatMap(w => w.coords)));
 
-    // Pre-populated Decoy Coordinates (Grey Cells in Screenshot)
+    // Pre-populated Decoy Coordinates
     const prefilledCoords = [
       "R1C1", "R1C5",
       "R2C3", "R2C4", "R2C7", "R2C9",
@@ -342,8 +340,8 @@
       "R7C2", "R8C7"
     ];
 
-    let gridData = JSON.parse(localStorage.getItem('zurich_grid_v2_2')) || Array(9).fill(null).map(() => Array(9).fill(''));
-    let highlightedTiles = JSON.parse(localStorage.getItem('zurich_highlights_v2_2')) || [];
+    let gridData = JSON.parse(localStorage.getItem('zurich_grid_v2_3')) || Array(9).fill(null).map(() => Array(9).fill(''));
+    let highlightedTiles = JSON.parse(localStorage.getItem('zurich_highlights_v2_3')) || [];
 
     let currentSelectedRow = null;
     let currentSelectedCol = null;
@@ -402,10 +400,7 @@
         if(prefilledCoords.includes(coordStr)) return;
         openInputModal(r, c);
       } else {
-        // Strict Check: Only allow highlighting on true puzzle word letters
-        if (!puzzleWordCoords.includes(coordStr)) {
-          return;
-        }
+        if (!puzzleWordCoords.includes(coordStr)) return;
 
         const idx = highlightedTiles.indexOf(coordStr);
         if(idx > -1) {
@@ -413,7 +408,7 @@
         } else {
           highlightedTiles.push(coordStr);
         }
-        localStorage.setItem('zurich_highlights_v2_2', JSON.stringify(highlightedTiles));
+        localStorage.setItem('zurich_highlights_v2_3', JSON.stringify(highlightedTiles));
         renderSentenceSlots();
         renderGrid();
       }
@@ -442,12 +437,12 @@
 
       if(val === expectedVal) {
         gridData[currentSelectedRow][currentSelectedCol] = val;
-        localStorage.setItem('zurich_grid_v2_2', JSON.stringify(gridData));
+        localStorage.setItem('zurich_grid_v2_3', JSON.stringify(gridData));
         closeInputModal();
         renderGrid();
       } else if (val === "") {
         gridData[currentSelectedRow][currentSelectedCol] = "";
-        localStorage.setItem('zurich_grid_v2_2', JSON.stringify(gridData));
+        localStorage.setItem('zurich_grid_v2_3', JSON.stringify(gridData));
         closeInputModal();
         renderGrid();
       } else {
@@ -476,7 +471,6 @@
         const slot = document.createElement('div');
         slot.className = 'word-slot';
 
-        // Word is revealed ONLY if 100% of its target coordinates are currently highlighted
         const isFullyHighlighted = word.coords.every(coord => highlightedTiles.includes(coord));
 
         if (isFullyHighlighted) {
@@ -510,8 +504,8 @@
       if(confirm("Reset all saved progress?")) {
         gridData = Array(9).fill(null).map(() => Array(9).fill(''));
         highlightedTiles = [];
-        localStorage.removeItem('zurich_grid_v2_2');
-        localStorage.removeItem('zurich_highlights_v2_2');
+        localStorage.removeItem('zurich_grid_v2_3');
+        localStorage.removeItem('zurich_highlights_v2_3');
         document.getElementById('wordSearchSection').style.display = 'none';
         isWordSearchActive = false;
         renderGrid();
