@@ -105,6 +105,12 @@
       border-radius: 20px;
       cursor: pointer;
       font-size: 0.85rem;
+      transition: opacity 0.3s ease;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
     }
 
     .section-card {
@@ -121,35 +127,39 @@
     .section-card h3 { color: var(--gold); font-size: 0.95rem; margin-bottom: 6px; text-align: center; }
     .section-card p.instructions { font-size: 0.75rem; color: var(--gold-light); text-align: center; margin-bottom: 10px; }
 
-    .word-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
-    .word-tag { background: #3d2521; padding: 6px 12px; border-radius: 14px; font-size: 0.8rem; color: var(--gold-light); cursor: pointer; border: 1px solid var(--gold); }
-    .word-tag.found { background: var(--gold); color: var(--bg-color); font-weight: bold; }
-
-    .ordered-guide-box {
-      min-height: 48px;
-      background: #180d0b;
-      border: 1px solid var(--gold);
-      border-radius: 8px;
-      padding: 8px;
+    .sentence-container {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      align-items: center;
       justify-content: center;
-      margin-bottom: 12px;
+      background: #180d0b;
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px;
+      min-height: 80px;
+      align-items: center;
     }
 
-    .sentence-box {
-      min-height: 50px;
-      background: #180d0b;
-      border: 1px solid var(--gold);
-      border-radius: 8px;
-      padding: 8px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-      margin-bottom: 12px;
+    .word-slot {
+      padding: 6px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+    }
+
+    .word-slot.hidden {
+      background: #2a1714;
+      color: #8c766b;
+      border: 1px dashed rgba(212, 175, 55, 0.3);
+    }
+
+    .word-slot.revealed {
+      background: var(--gold);
+      color: var(--bg-color);
+      box-shadow: 0 0 8px var(--gold);
     }
 
     /* Modals */
@@ -235,28 +245,15 @@
     <button onclick="clearGrid()">Reset Grid</button>
   </div>
 
-  <!-- Stage 1: Word Search -->
+  <!-- Stage 1: Word Search & Secret Sentence -->
   <div class="section-card" id="wordSearchSection">
     <h3>Stage 1: Word Search Hunt!</h3>
-    <p class="instructions">Find words in the grid and tap them below as you locate them:</p>
+    <p class="instructions">Highlight tiles in the grid to uncover the hidden words below:</p>
     
-    <!-- Ordered Sequence Guide -->
-    <div style="font-size:0.75rem; color:var(--gold); text-align:center; margin-bottom:4px; font-weight:bold;">Your Ordered Phrase Guide:</div>
-    <div class="ordered-guide-box" id="orderedGuide">
-      <span style="font-size:0.75rem; color:#8c766b;">(Found words will appear here in correct order)</span>
-    </div>
+    <div class="sentence-container" id="sentenceContainer"></div>
 
-    <div class="word-tags" id="wordSearchBank"></div>
-  </div>
-
-  <!-- Stage 2: Sentence Builder -->
-  <div class="section-card" id="sentenceSection">
-    <h3>Stage 2: Assemble the Secret Phrase!</h3>
-    <p class="instructions">Tap the words below in order using your phrase guide above:</p>
-    <div class="sentence-box" id="sentenceSlots"></div>
-    <div class="word-tags" id="bankTags"></div>
-    <div style="text-align:center; margin-top:12px;">
-      <button onclick="checkSentence()">Reveal Trip!</button>
+    <div style="text-align:center;">
+      <button id="solveBtn" disabled onclick="revealTripModal()">Click to Solve the Puzzle!</button>
     </div>
   </div>
 
@@ -290,42 +287,53 @@
 
   <script>
     const ROWS = 9, COLS = 9;
-    const targetWords = ["YOUR", "SWISS", "CHOCOLATE", "BIRTHDAY", "ADVENTURE", "AWAITS", "AT", "LINDT", "ZURICH"];
-    const correctSentence = "YOUR SWISS CHOCOLATE BIRTHDAY ADVENTURE AWAITS AT LINDT ZURICH";
-    
-    // Master Grid Solution Matrix
+
+    // Updated 9x9 Master Grid Layout
     const solutionGrid = [
-      ['H', 'C', 'I', 'R', 'U', 'Z', 'Q', 'X', 'P'],
+      ['Q', 'Z', 'A', 'T', 'D', 'Y', 'O', 'U', 'R'],
+      ['S', 'L', 'G', 'U', 'R', 'A', 'X', 'D', 'N'],
+      ['T', 'I', 'H', 'K', 'Q', 'D', 'S', 'Z', 'O'],
+      ['I', 'N', 'X', 'L', 'F', 'H', 'V', 'U', 'P'],
       ['A', 'D', 'V', 'E', 'N', 'T', 'U', 'R', 'E'],
-      ['L', 'I', 'N', 'D', 'T', 'S', 'M', 'B', 'O'],
-      ['Y', 'O', 'U', 'R', 'B', 'K', 'G', 'I', 'X'],
-      ['A', 'T', 'W', 'P', 'A', 'W', 'A', 'I', 'T'],
-      ['R', 'Y', 'A', 'D', 'H', 'T', 'R', 'I', 'B'],
-      ['S', 'W', 'I', 'S', 'S', 'C', 'L', 'U', 'B'],
-      ['E', 'T', 'A', 'L', 'O', 'C', 'O', 'H', 'C'],
-      ['S', 'U', 'R', 'P', 'R', 'I', 'S', 'E', '!']
+      ['W', 'T', 'J', 'H', 'B', 'R', 'L', 'I', 'S'],
+      ['A', 'G', 'Y', 'E', 'W', 'I', 'J', 'C', 'O'],
+      ['S', 'W', 'I', 'S', 'S', 'B', 'P', 'H', 'L'],
+      ['E', 'T', 'A', 'L', 'O', 'C', 'O', 'H', 'C']
+    ];
+
+    // Target Word Definitions & Exact Coordinates
+    const targetWords = [
+      { id: "YOUR", text: "YOUR", coords: ["R1C6", "R1C7", "R1C8", "R1C9"] },
+      { id: "SWISS", text: "SWISS", coords: ["R8C1", "R8C2", "R8C3", "R8C4", "R8C5"] },
+      { id: "CHOCOLATE", text: "CHOCOLATE", coords: ["R9C9", "R9C8", "R9C7", "R9C6", "R9C5", "R9C4", "R9C3", "R9C2", "R9C1"] },
+      { id: "BIRTHDAY", text: "BIRTHDAY", coords: ["R8C6", "R7C6", "R6C6", "R5C6", "R4C6", "R3C6", "R2C6", "R1C6"] },
+      { id: "ADVENTURE", text: "ADVENTURE", coords: ["R5C1", "R5C2", "R5C3", "R5C4", "R5C5", "R5C6", "R5C7", "R5C8", "R5C9"] },
+      { id: "AWAITS", text: "AWAITS", coords: ["R7C1", "R6C1", "R5C1", "R4C1", "R3C1", "R2C1"] },
+      { id: "AT", text: "AT", coords: ["R1C3", "R1C4"] },
+      { id: "LINDT", text: "LINDT", coords: ["R2C2", "R3C2", "R4C2", "R5C2", "R6C2"] },
+      { id: "ZURICH", text: "ZURICH", coords: ["R3C8", "R4C8", "R5C8", "R6C8", "R7C8", "R8C8", "R9C8"] }
     ];
 
     // Pre-populated Decoy Coordinates
     const prefilledCoords = [
-      "R1C7", "R1C8", "R1C9",
-      "R3C7", "R3C8", "R3C9",
-      "R4C6", "R4C7", "R4C9",
-      "R5C3",
-      "R7C6", "R7C7", "R7C8", "R7C9",
-      "R9C4", "R9C6", "R9C7", "R9C8"
+      "R1C1", "R1C2", "R1C5",
+      "R2C3", "R2C4", "R2C5", "R2C7", "R2C8", "R2C9",
+      "R3C3", "R3C4", "R3C5", "R3C7", "R3C9",
+      "R4C3", "R4C4", "R4C5", "R4C7", "R4C9",
+      "R6C3", "R6C4", "R6C5", "R6C7", "R6C8", "R6C9",
+      "R7C2", "R7C3", "R7C4", "R7C5", "R7C7", "R7C9",
+      "R8C7", "R8C9"
     ];
 
-    let gridData = JSON.parse(localStorage.getItem('zurich_grid_v4')) || Array(9).fill(null).map(() => Array(9).fill(''));
-    let highlightedTiles = JSON.parse(localStorage.getItem('zurich_highlights_v4')) || [];
-    let foundWords = JSON.parse(localStorage.getItem('zurich_found_words_v4')) || [];
-    let assembledWords = [];
+    let gridData = JSON.parse(localStorage.getItem('zurich_grid_v5')) || Array(9).fill(null).map(() => Array(9).fill(''));
+    let highlightedTiles = JSON.parse(localStorage.getItem('zurich_highlights_v5')) || [];
+    let foundWordIds = JSON.parse(localStorage.getItem('zurich_found_words_v5')) || [];
 
     let currentSelectedRow = null;
     let currentSelectedCol = null;
     let isWordSearchActive = false;
 
-    // Load prefilled decoy letters
+    // Load prefilled decoy letters into grid
     prefilledCoords.forEach(coord => {
       const r = parseInt(coord[1]) - 1;
       const c = parseInt(coord[3]) - 1;
@@ -373,21 +381,32 @@
     }
 
     function handleTileTap(r, c) {
+      const coordStr = `R${r+1}C${c+1}`;
       if(!isWordSearchActive) {
-        const coordStr = `R${r+1}C${c+1}`;
         if(prefilledCoords.includes(coordStr)) return;
         openInputModal(r, c);
       } else {
-        const coordStr = `R${r+1}C${c+1}`;
         const idx = highlightedTiles.indexOf(coordStr);
         if(idx > -1) {
           highlightedTiles.splice(idx, 1);
         } else {
           highlightedTiles.push(coordStr);
         }
-        localStorage.setItem('zurich_highlights_v4', JSON.stringify(highlightedTiles));
+        localStorage.setItem('zurich_highlights_v5', JSON.stringify(highlightedTiles));
+        checkWordSearchMatches();
         renderGrid();
       }
+    }
+
+    function checkWordSearchMatches() {
+      targetWords.forEach(word => {
+        const isMatched = word.coords.every(coord => highlightedTiles.includes(coord));
+        if (isMatched && !foundWordIds.includes(word.id)) {
+          foundWordIds.push(word.id);
+          localStorage.setItem('zurich_found_words_v5', JSON.stringify(foundWordIds));
+        }
+      });
+      renderSentenceSlots();
     }
 
     function openInputModal(r, c) {
@@ -413,12 +432,12 @@
 
       if(val === expectedVal) {
         gridData[currentSelectedRow][currentSelectedCol] = val;
-        localStorage.setItem('zurich_grid_v4', JSON.stringify(gridData));
+        localStorage.setItem('zurich_grid_v5', JSON.stringify(gridData));
         closeInputModal();
         renderGrid();
       } else if (val === "") {
         gridData[currentSelectedRow][currentSelectedCol] = "";
-        localStorage.setItem('zurich_grid_v4', JSON.stringify(gridData));
+        localStorage.setItem('zurich_grid_v5', JSON.stringify(gridData));
         closeInputModal();
         renderGrid();
       } else {
@@ -435,115 +454,48 @@
     function enableWordSearchMode() {
       isWordSearchActive = true;
       document.getElementById('wordSearchSection').style.display = 'block';
-      renderWordSearchBank();
-      updateOrderedGuide();
+      checkWordSearchMatches();
     }
 
-    function renderWordSearchBank() {
-      const bank = document.getElementById('wordSearchBank');
-      bank.innerHTML = '';
+    function renderSentenceSlots() {
+      const container = document.getElementById('sentenceContainer');
+      container.innerHTML = '';
 
-      // Shuffled checklist display order
-      const displayOrder = ["ADVENTURE", "ZURICH", "CHOCOLATE", "AWAITS", "BIRTHDAY", "SWISS", "LINDT", "YOUR", "AT"];
+      targetWords.forEach(word => {
+        const slot = document.createElement('div');
+        slot.className = 'word-slot';
 
-      displayOrder.forEach(word => {
-        const tag = document.createElement('div');
-        tag.className = 'word-tag';
-        if(foundWords.includes(word)) {
-          tag.style.display = 'none'; // Hide from bank once found
+        if (foundWordIds.includes(word.id)) {
+          slot.classList.add('revealed');
+          slot.textContent = word.text;
+        } else {
+          slot.classList.add('hidden');
+          slot.textContent = '? '.repeat(word.text.length).trim();
         }
-        tag.textContent = word;
-        
-        tag.onclick = () => {
-          if(!foundWords.includes(word)) {
-            foundWords.push(word);
-            localStorage.setItem('zurich_found_words_v4', JSON.stringify(foundWords));
-            renderWordSearchBank();
-            updateOrderedGuide();
-            checkAllWordsFound();
-          }
-        };
-
-        bank.appendChild(tag);
+        container.appendChild(slot);
       });
-    }
 
-    function updateOrderedGuide() {
-      const guideBox = document.getElementById('orderedGuide');
-      guideBox.innerHTML = '';
-
-      if(foundWords.length === 0) {
-        guideBox.innerHTML = '<span style="font-size:0.75rem; color:#8c766b;">(Found words will appear here in correct order)</span>';
-        return;
-      }
-
-      // Filter targetWords in exact sentence order, only showing those found so far
-      targetWords.forEach((word, idx) => {
-        if(foundWords.includes(word)) {
-          const tag = document.createElement('div');
-          tag.className = 'word-tag found';
-          tag.textContent = `${idx + 1}. ${word}`;
-          guideBox.appendChild(tag);
-        }
-      });
-    }
-
-    function checkAllWordsFound() {
-      if(foundWords.length === targetWords.length) {
-        setTimeout(() => {
-          enableSentenceBuilder();
-        }, 500);
-      }
-    }
-
-    function enableSentenceBuilder() {
-      document.getElementById('sentenceSection').style.display = 'block';
-      const bank = document.getElementById('bankTags');
-      bank.innerHTML = '';
-      
-      const shuffled = [...targetWords].sort(() => Math.random() - 0.5);
-      shuffled.forEach(word => {
-        const tag = document.createElement('div');
-        tag.className = 'word-tag';
-        tag.textContent = word;
-        tag.onclick = () => moveWordToSentence(word, tag);
-        bank.appendChild(tag);
-      });
-    }
-
-    function moveWordToSentence(word, tagElement) {
-      assembledWords.push(word);
-      tagElement.style.display = 'none';
-      
-      const slots = document.getElementById('sentenceSlots');
-      const wordTag = document.createElement('div');
-      wordTag.className = 'word-tag found';
-      wordTag.textContent = word;
-      slots.appendChild(wordTag);
-    }
-
-    function checkSentence() {
-      if(assembledWords.join(' ') === correctSentence) {
-        document.getElementById('revealModal').style.display = 'flex';
+      const solveBtn = document.getElementById('solveBtn');
+      if (foundWordIds.length === targetWords.length) {
+        solveBtn.disabled = false;
       } else {
-        alert("Not quite right yet! Check your phrase guide above and re-order the words.");
-        assembledWords = [];
-        document.getElementById('sentenceSlots').innerHTML = '';
-        enableSentenceBuilder();
+        solveBtn.disabled = true;
       }
+    }
+
+    function revealTripModal() {
+      document.getElementById('revealModal').style.display = 'flex';
     }
 
     function clearGrid() {
       if(confirm("Reset all saved progress?")) {
         gridData = Array(9).fill(null).map(() => Array(9).fill(''));
         highlightedTiles = [];
-        foundWords = [];
-        assembledWords = [];
-        localStorage.removeItem('zurich_grid_v4');
-        localStorage.removeItem('zurich_highlights_v4');
-        localStorage.removeItem('zurich_found_words_v4');
+        foundWordIds = [];
+        localStorage.removeItem('zurich_grid_v5');
+        localStorage.removeItem('zurich_highlights_v5');
+        localStorage.removeItem('zurich_found_words_v5');
         document.getElementById('wordSearchSection').style.display = 'none';
-        document.getElementById('sentenceSection').style.display = 'none';
         isWordSearchActive = false;
         renderGrid();
       }
