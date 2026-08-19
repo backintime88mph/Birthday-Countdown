@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>A Sweet Birthday Surprise - Baseline_V2.3-Complete (TESTING MODE)</title>
+  <style>
+    :root {
+      --bg-color: #1a0f0d;
+      --card-bg: #2d1b18;
+      --gold: #d4af37;
+      --gold-light: #f3e5ab;
+      --text-light: #f8f5f0;
+      --accent-red: #8b0000;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-light);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 15px;
+    }
+
+    header { text-align: center; margin-bottom: 15px; }
+    h1 { color: var(--gold); font-size: 1.6rem; letter-spacing: 1px; margin-bottom: 4px; }
+    p.subtitle { font-size: 0.85rem; color: var(--gold-light); opacity: 0.85; }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 4px;
+      background: var(--card-bg);
+      padding: 10px;
+      border-radius: 12px;
+      border: 2px solid var(--gold);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      max-width: 450px;
+      width: 100%;
+    }
+
+    .tile {
+      aspect-ratio: 1;
+      background: #3d2521;
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--gold-light);
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+
+    .tile .coord {
+      font-size: 0.42rem;
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      opacity: 0.4;
+      color: var(--text-light);
+    }
+
+    .tile.filled {
+      background: #52322c;
+      border-color: rgba(212, 175, 55, 0.5);
+    }
+
+    .tile.prefilled {
+      background: #2a1714;
+      color: #8c766b;
+      border-color: rgba(212, 175, 55, 0.15);
+    }
+
+    .tile.highlighted {
+      background: var(--gold) !important;
+      color: var(--bg-color) !important;
+      font-weight: 900;
+      box-shadow: 0 0 10px var(--gold);
+    }
+
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      max-width: 450px;
+      width: 100%;
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--gold), #aa820a);
+      color: var(--bg-color);
+      border: none;
+      padding: 10px 18px;
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: opacity 0.3s ease;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .section-card {
+      margin-top: 18px;
+      background: var(--card-bg);
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px dashed var(--gold);
+      max-width: 450px;
+      width: 100%;
+      display: none;
+    }
+
+    .section-card h3 { color: var(--gold); font-size: 0.95rem; margin-bottom: 6px; text-align: center; }
+    .section-card p.instructions { font-size: 0.75rem; color: var(--gold-light); text-align: center; margin-bottom: 10px; }
+
+    .sentence-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      background: #180d0b;
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px;
+      min-height: 80px;
+      align-items: center;
+    }
+
+    .word-slot {
+      padding: 6px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+    }
+
+    .word-slot.hidden {
+      background: #2a1714;
+      color: #8c766b;
+      border: 1px dashed rgba(212, 175, 55, 0.3);
+    }
+
+    .word-slot.revealed {
+      background: var(--gold);
+      color: var(--bg-color);
+      box-shadow: 0 0 8px var(--gold);
+    }
+
+    /* Modals */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      z-index: 100;
+    }
+
+    .input-card {
+      background: var(--card-bg);
+      border: 2px solid var(--gold);
+      border-radius: 14px;
+      padding: 20px;
+      max-width: 320px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+
+    .input-card h3 { color: var(--gold); font-size: 1.2rem; margin-bottom: 4px; }
+    .input-card p { font-size: 0.85rem; color: var(--gold-light); margin-bottom: 12px; }
+    
+    .input-card input {
+      width: 60px;
+      height: 60px;
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      background: #180d0b;
+      border: 1px solid var(--gold);
+      color: var(--gold-light);
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .input-card .btn-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* Image-Only Reveal Modal Card */
+    .ticket-image-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 12px;
+      max-width: 420px;
+      width: 95%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+      border: 3px double var(--gold);
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .ticket-image-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      display: block;
+      border: 1px solid rgba(212, 175, 55, 0.4);
+    }
+
+    .ticket-image-card .close-btn {
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      width: 32px;
+      height: 32px;
+      background: var(--gold);
+      color: var(--bg-color);
+      border-radius: 50%;
+      font-size: 1.2rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>The Birthday Countdown (TESTING)</h1>
+    <p class="subtitle">Grid pre-completed for testing the final reveal modal</p>
+  </header>
+
+  <div class="grid-container" id="grid"></div>
+
+  <div class="controls">
+    <button onclick="clearGrid()">Reset Test Grid</button>
+  </div>
+
+  <!-- Stage 1: Word Search & Secret Sentence -->
+  <div class="section-card" id="wordSearchSection">
+    <h3>Stage 1: Word Search Hunt!</h3>
+    <p class="instructions">Highlight tiles in the grid to uncover the hidden words below:</p>
+    
+    <div class="sentence-container" id="sentenceContainer"></div>
+
+    <div style="text-align:center;">
+      <button id="solveBtn" disabled onclick="revealTripModal()">Click to Solve the Puzzle!</button>
+    </div>
+  </div>
+
+  <!-- Custom Input Modal -->
+  <div class="modal" id="inputModal">
+    <div class="input-card">
+      <h3>Matty says...</h3>
+      <p id="modalPromptText">Enter letter for Row 1, Column 1:</p>
+      <input type="text" id="letterInput" maxlength="1" autocomplete="off" />
+      <div class="btn-group">
+        <button onclick="submitLetter()">Submit</button>
+        <button onclick="closeInputModal()" style="background: #3d2521; color: var(--gold-light);">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final Image Reveal Modal -->
+  <div class="modal" id="revealModal">
+    <div class="ticket-image-card">
+      <span class="close-btn" onclick="closeRevealModal()">&times;</span>
+      <img src="./Final_image.jpg" alt="Birthday Surprise Image" />
+    </div>
+  </div>
+
+  <script>
+    const ROWS = 9, COLS = 9;
+
+    // 9x9 Master Grid Layout
+    const solutionGrid = [
+      ['Q', 'Z', 'A', 'T', 'D', 'Y', 'O', 'U', 'R'],
+      ['S', 'L', 'G', 'U', 'R', 'A', 'X', 'D', 'N'],
+      ['T', 'I', 'H', 'K', 'Q', 'D', 'S', 'Z', 'O'],
+      ['I', 'N', 'X', 'L', 'F', 'H', 'V', 'U', 'P'],
+      ['A', 'D', 'V', 'E', 'N', 'T', 'U', 'R', 'E'],
+      ['W', 'T', 'J', 'H', 'B', 'R', 'L', 'I', 'S'],
+      ['A', 'G', 'Y', 'E', 'W', 'I', 'J', 'C', 'O'],
+      ['S', 'W', 'I', 'S', 'S', 'B', 'P', 'H', 'L'],
+      ['E', 'T', 'A', 'L', 'O', 'C', 'O', 'H', 'C']
+    ];
+
+    // Target Word Definitions & Exact Coordinates
+    const targetWords = [
+      { id: "YOUR", text: "YOUR", coords: ["R1C6", "R1C7", "R1C8", "R1C9"] },
+      { id: "SWISS", text: "SWISS", coords: ["R8C1", "R8C2", "R8C3", "R8C4", "R8C5"] },
+      { id: "CHOCOLATE", text: "CHOCOLATE", coords: ["R9C9", "R9C8", "R9C7", "R9C6", "R9C5", "R9C4", "R9C3", "R9C2", "R9C1"] },
+      { id: "BIRTHDAY", text: "BIRTHDAY", coords: ["R8C6", "R7C6", "R6C6", "R5C6", "R4C6", "R3C6", "R2C6", "R1C6"] },
+      { id: "ADVENTURE", text: "ADVENTURE", coords: ["R5C1", "R5C2", "R5C3", "R5C4", "R5C5", "R5C6", "R5C7", "R5C8", "R5C9"] },
+      { id: "AWAITS", text: "AWAITS", coords: ["R7C1", "R6C1", "R5C1", "R4C1", "R3C1", "R2C1"] },
+      { id: "AT", text: "AT", coords: ["R1C3", "R1C4"] },
+      { id: "LINDT", text: "LINDT", coords: ["R2C2", "R3C2", "R4C2", "R5C2", "R6C2"] },
+      { id: "ZURICH", text: "ZURICH", coords: ["R3C8", "R4C8", "R5C8", "R6C8", "R7C8", "R8C8", "R9C8"] }
+    ];
+
+    // Combined list of all valid puzzle word tile coordinates
+    const puzzleWordCoords = Array.from(new Set(targetWords.flatMap(w => w.coords)));
+
+    // Pre-populated Decoy Coordinates
+    const prefilledCoords = [
+      "R1C1", "R1C5",
+      "R2C3", "R2C4", "R2C7", "R2C9",
+      "R3C3", "R3C5",
+      "R4C3", "R4C5", "R4C7", "R4C9",
+      "R6C3", "R6C5", "R6C7", "R6C9",
+      "R7C2", "R8C7"
+    ];
+
+    // INITIALIZE WITH 100% FILLED GRID AND HIGHLIGHTS FOR TESTING
+    let gridData = JSON.parse(localStorage.getItem('zurich_grid_v2_3_complete')) || JSON.parse(JSON.stringify(solutionGrid));
+    let highlightedTiles = JSON.parse(localStorage.getItem('zurich_highlights_v2_3_complete')) || [...puzzleWordCoords];
+
+    let currentSelectedRow = null;
+    let currentSelectedCol = null;
+    let isWordSearchActive = true; // Auto-activated for testing
+
+    function renderGrid() {
+      const container = document.getElementById('grid');
+      container.innerHTML = '';
+      let filledCount = 0;
+
+      for(let r=0; r<ROWS; r++) {
+        for(let c=0; c<COLS; c++) {
+          const tile = document.createElement('div');
+          tile.className = 'tile';
+          const coordStr = `R${r+1}C${c+1}`;
+          
+          if(prefilledCoords.includes(coordStr)) {
+            tile.classList.add('prefilled');
+          }
+
+          if(gridData[r][c]) {
+            tile.textContent = gridData[r][c];
+            if(!prefilledCoords.includes(coordStr)) tile.classList.add('filled');
+            filledCount++;
+          }
+
+          if(highlightedTiles.includes(coordStr)) {
+            tile.classList.add('highlighted');
+          }
+          
+          const coord = document.createElement('span');
+          coord.className = 'coord';
+          coord.textContent = coordStr;
+          tile.appendChild(coord);
+
+          tile.onclick = () => handleTileTap(r, c);
+          container.appendChild(tile);
+        }
+      }
+
+      if(filledCount === 81) {
+        enableWordSearchMode();
+      }
+    }
+
+    function handleTileTap(r, c) {
+      const coordStr = `R${r+1}C${c+1}`;
+      if(!isWordSearchActive) {
+        if(prefilledCoords.includes(coordStr)) return;
+        openInputModal(r, c);
+      } else {
+        if (!puzzleWordCoords.includes(coordStr)) return;
+
+        const idx = highlightedTiles.indexOf(coordStr);
+        if(idx > -1) {
+          highlightedTiles.splice(idx, 1);
+        } else {
+          highlightedTiles.push(coordStr);
+        }
+        localStorage.setItem('zurich_highlights_v2_3_complete', JSON.stringify(highlightedTiles));
+        renderSentenceSlots();
+        renderGrid();
+      }
+    }
+
+    function openInputModal(r, c) {
+      currentSelectedRow = r;
+      currentSelectedCol = c;
+      document.getElementById('modalPromptText').textContent = `Enter token letter for R${r+1}C${c+1}:`;
+      const inputField = document.getElementById('letterInput');
+      inputField.value = gridData[r][c] || '';
+      document.getElementById('inputModal').style.display = 'flex';
+      setTimeout(() => inputField.focus(), 100);
+    }
+
+    function closeInputModal() {
+      document.getElementById('inputModal').style.display = 'none';
+      currentSelectedRow = null;
+      currentSelectedCol = null;
+    }
+
+    function submitLetter() {
+      const inputField = document.getElementById('letterInput');
+      const val = inputField.value.trim().toUpperCase();
+      const expectedVal = solutionGrid[currentSelectedRow][currentSelectedCol];
+
+      if(val === expectedVal) {
+        gridData[currentSelectedRow][currentSelectedCol] = val;
+        localStorage.setItem('zurich_grid_v2_3_complete', JSON.stringify(gridData));
+        closeInputModal();
+        renderGrid();
+      } else if (val === "") {
+        gridData[currentSelectedRow][currentSelectedCol] = "";
+        localStorage.setItem('zurich_grid_v2_3_complete', JSON.stringify(gridData));
+        closeInputModal();
+        renderGrid();
+      } else {
+        alert(`Not quite! Double check your token slip for Row ${currentSelectedRow+1}, Column ${currentSelectedCol+1}.`);
+        inputField.value = '';
+        inputField.focus();
+      }
+    }
+
+    document.getElementById('letterInput').addEventListener('keyup', function(e) {
+      if(e.key === 'Enter') submitLetter();
+    });
+
+    function enableWordSearchMode() {
+      isWordSearchActive = true;
+      document.getElementById('wordSearchSection').style.display = 'block';
+      renderSentenceSlots();
+    }
+
+    function renderSentenceSlots() {
+      const container = document.getElementById('sentenceContainer');
+      container.innerHTML = '';
+      let foundCount = 0;
+
+      targetWords.forEach(word => {
+        const slot = document.createElement('div');
+        slot.className = 'word-slot';
+
+        const isFullyHighlighted = word.coords.every(coord => highlightedTiles.includes(coord));
+
+        if (isFullyHighlighted) {
+          slot.classList.add('revealed');
+          slot.textContent = word.text;
+          foundCount++;
+        } else {
+          slot.classList.add('hidden');
+          slot.textContent = '? '.repeat(word.text.length).trim();
+        }
+        container.appendChild(slot);
+      });
+
+      const solveBtn = document.getElementById('solveBtn');
+      if (foundCount === targetWords.length) {
+        solveBtn.disabled = false;
+      } else {
+        solveBtn.disabled = true;
+      }
+    }
+
+    function revealTripModal() {
+      document.getElementById('revealModal').style.display = 'flex';
+    }
+
+    function closeRevealModal() {
+      document.getElementById('revealModal').style.display = 'none';
+    }
+
+    function clearGrid() {
+      if(confirm("Reset all test progress back to fully unlocked mode?")) {
+        gridData = JSON.parse(JSON.stringify(solutionGrid));
+        highlightedTiles = [...puzzleWordCoords];
+        localStorage.setItem('zurich_grid_v2_3_complete', JSON.stringify(gridData));
+        localStorage.setItem('zurich_highlights_v2_3_complete', JSON.stringify(highlightedTiles));
+        renderGrid();
+      }
+    }
+
+    renderGrid();
+  </script>
+</body>
+</html>
