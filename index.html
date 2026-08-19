@@ -218,9 +218,23 @@
       text-align: center;
       box-shadow: 0 20px 50px rgba(0,0,0,0.8);
       border: 3px double var(--gold);
+      position: relative;
     }
 
-    .ticket h2 { color: var(--accent-red); font-size: 1.6rem; margin-bottom: 8px; }
+    .ticket .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #2d1b18;
+      cursor: pointer;
+      line-height: 1;
+      opacity: 0.6;
+    }
+    .ticket .close-btn:hover { opacity: 1; }
+
+    .ticket h2 { color: var(--accent-red); font-size: 1.6rem; margin-bottom: 8px; margin-top: 5px; }
     .ticket p { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.4; }
     .ticket .details {
       background: rgba(0,0,0,0.05);
@@ -273,6 +287,7 @@
   <!-- Final Reveal Modal -->
   <div class="modal" id="revealModal">
     <div class="ticket">
+      <span class="close-btn" onclick="closeRevealModal()">&times;</span>
       <h2>HAPPY 40TH BIRTHDAY!</h2>
       <p><strong>Pack Your Bags!</strong></p>
       <p>We are off on a sweet birthday adventure to Switzerland!</p>
@@ -288,7 +303,7 @@
   <script>
     const ROWS = 9, COLS = 9;
 
-    // Updated 9x9 Master Grid Layout
+    // 9x9 Master Grid Layout
     const solutionGrid = [
       ['Q', 'Z', 'A', 'T', 'D', 'Y', 'O', 'U', 'R'],
       ['S', 'L', 'G', 'U', 'R', 'A', 'X', 'D', 'N'],
@@ -314,20 +329,19 @@
       { id: "ZURICH", text: "ZURICH", coords: ["R3C8", "R4C8", "R5C8", "R6C8", "R7C8", "R8C8", "R9C8"] }
     ];
 
-    // Pre-populated Decoy Coordinates
+    // Pre-populated Decoy Coordinates (Grey Cells in Screenshot)
     const prefilledCoords = [
-      "R1C1", "R1C2", "R1C5",
-      "R2C3", "R2C4", "R2C5", "R2C7", "R2C8", "R2C9",
-      "R3C3", "R3C4", "R3C5", "R3C7", "R3C9",
-      "R4C3", "R4C4", "R4C5", "R4C7", "R4C9",
-      "R6C3", "R6C4", "R6C5", "R6C7", "R6C8", "R6C9",
-      "R7C2", "R7C3", "R7C4", "R7C5", "R7C7", "R7C9",
-      "R8C7", "R8C9"
+      "R1C1", "R1C5",
+      "R2C3", "R2C4", "R2C7", "R2C9",
+      "R3C3", "R3C5",
+      "R4C3", "R4C5", "R4C7", "R4C9",
+      "R6C3", "R6C5", "R6C7", "R6C9",
+      "R7C2", "R8C7"
     ];
 
-    let gridData = JSON.parse(localStorage.getItem('zurich_grid_v5')) || Array(9).fill(null).map(() => Array(9).fill(''));
-    let highlightedTiles = JSON.parse(localStorage.getItem('zurich_highlights_v5')) || [];
-    let foundWordIds = JSON.parse(localStorage.getItem('zurich_found_words_v5')) || [];
+    let gridData = JSON.parse(localStorage.getItem('zurich_grid_v2_1')) || Array(9).fill(null).map(() => Array(9).fill(''));
+    let highlightedTiles = JSON.parse(localStorage.getItem('zurich_highlights_v2_1')) || [];
+    let foundWordIds = JSON.parse(localStorage.getItem('zurich_found_words_v2_1')) || [];
 
     let currentSelectedRow = null;
     let currentSelectedCol = null;
@@ -392,7 +406,7 @@
         } else {
           highlightedTiles.push(coordStr);
         }
-        localStorage.setItem('zurich_highlights_v5', JSON.stringify(highlightedTiles));
+        localStorage.setItem('zurich_highlights_v2_1', JSON.stringify(highlightedTiles));
         checkWordSearchMatches();
         renderGrid();
       }
@@ -403,7 +417,7 @@
         const isMatched = word.coords.every(coord => highlightedTiles.includes(coord));
         if (isMatched && !foundWordIds.includes(word.id)) {
           foundWordIds.push(word.id);
-          localStorage.setItem('zurich_found_words_v5', JSON.stringify(foundWordIds));
+          localStorage.setItem('zurich_found_words_v2_1', JSON.stringify(foundWordIds));
         }
       });
       renderSentenceSlots();
@@ -432,12 +446,12 @@
 
       if(val === expectedVal) {
         gridData[currentSelectedRow][currentSelectedCol] = val;
-        localStorage.setItem('zurich_grid_v5', JSON.stringify(gridData));
+        localStorage.setItem('zurich_grid_v2_1', JSON.stringify(gridData));
         closeInputModal();
         renderGrid();
       } else if (val === "") {
         gridData[currentSelectedRow][currentSelectedCol] = "";
-        localStorage.setItem('zurich_grid_v5', JSON.stringify(gridData));
+        localStorage.setItem('zurich_grid_v2_1', JSON.stringify(gridData));
         closeInputModal();
         renderGrid();
       } else {
@@ -487,14 +501,18 @@
       document.getElementById('revealModal').style.display = 'flex';
     }
 
+    function closeRevealModal() {
+      document.getElementById('revealModal').style.display = 'none';
+    }
+
     function clearGrid() {
       if(confirm("Reset all saved progress?")) {
         gridData = Array(9).fill(null).map(() => Array(9).fill(''));
         highlightedTiles = [];
         foundWordIds = [];
-        localStorage.removeItem('zurich_grid_v5');
-        localStorage.removeItem('zurich_highlights_v5');
-        localStorage.removeItem('zurich_found_words_v5');
+        localStorage.removeItem('zurich_grid_v2_1');
+        localStorage.removeItem('zurich_highlights_v2_1');
+        localStorage.removeItem('zurich_found_words_v2_1');
         document.getElementById('wordSearchSection').style.display = 'none';
         isWordSearchActive = false;
         renderGrid();
